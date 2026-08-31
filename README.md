@@ -1,10 +1,7 @@
-# SlideSnap AI v6 — YouTube Cloud Fix
+# SlideSnap AI v7
 
-Fixes the current Streamlit Cloud YouTube extraction error by:
-- using Node.js as the yt-dlp JavaScript runtime
-- installing Node.js through Streamlit Cloud `packages.txt`
-- avoiding separate video+audio merging, so ffmpeg is not required for the first test
+This version fixes the YouTube runtime problem by installing Deno at runtime using Deno's official installer and explicitly passing the Deno executable to yt-dlp.
 
-Replace `app.py`, `requirements.txt`, and add `packages.txt` to the GitHub repository, then commit.
+It also uses a fallback-friendly format selector (`b[ext=mp4]/b`) instead of requiring a specific pre-merged format.
 
-If a particular YouTube video still cannot be fetched, the error may be caused by that video's availability, authentication, region/age restrictions, or further YouTube-side changes.
+Replace `app.py` and `requirements.txt` in GitHub, commit, and wait for Streamlit to redeploy.
