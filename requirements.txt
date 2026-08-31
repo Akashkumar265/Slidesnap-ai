@@ -2,5 +2,4 @@ streamlit
 opencv-python-headless
 numpy
 reportlab
-yt-dlp[default]
-yt-dlp-ejs
+requests
