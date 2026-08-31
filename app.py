@@ -77,7 +77,8 @@ def download_video(video_url,workdir):
         "yt-dlp","--no-playlist",
         "--remote-components","ejs:github",
         "--js-runtimes",f"deno:{deno}",
-        "-f","b[ext=mp4]/b",
+        "-f","bestvideo*+bestaudio/best",
+        "--merge-output-format","mp4",
         "-o",output,video_url
     ]
     run_command(cmd)

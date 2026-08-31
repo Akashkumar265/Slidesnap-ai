@@ -1,13 +1,9 @@
-# SlideSnap AI v8
+# SlideSnap AI v9
 
-Fixes the Deno installation error on Streamlit Cloud.
+Fixes the v8 format-selection problem:
+- uses yt-dlp's standard `bestvideo*+bestaudio/best` fallback selector
+- installs ffmpeg so separate video/audio streams can be merged
+- keeps Deno + EJS support for current YouTube extraction
+- shows a clearer message if YouTube exposes no downloadable video format
 
-The previous version failed because Deno's official installer needs either `unzip` or `7z` to extract the downloaded archive. Streamlit Cloud now installs `unzip` through `packages.txt`.
-
-Replace:
-- app.py
-- requirements.txt
-and ADD:
-- packages.txt
-
-Then commit the changes and let Streamlit redeploy.
+Replace `app.py`, `requirements.txt`, and `packages.txt` in GitHub, commit, and wait for Streamlit Cloud to redeploy.
