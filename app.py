@@ -59,9 +59,8 @@ def download_video(video_url, workdir):
         "yt-dlp",
         "--no-playlist",
         "--remote-components", "ejs:github",
-        "--js-runtimes", "deno",
-        "-f", "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b",
-        "--merge-output-format", "mp4",
+        "--js-runtimes", "node",
+        "-f", "b[ext=mp4]/b",
         "-o", output,
         video_url,
     ]

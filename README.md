@@ -1,12 +1,10 @@
-# SlideSnap AI v5
+# SlideSnap AI v6 — YouTube Cloud Fix
 
-This is a clean syntax-fixed version for Streamlit Cloud.
+Fixes the current Streamlit Cloud YouTube extraction error by:
+- using Node.js as the yt-dlp JavaScript runtime
+- installing Node.js through Streamlit Cloud `packages.txt`
+- avoiding separate video+audio merging, so ffmpeg is not required for the first test
 
-It includes:
-- YouTube extraction with current yt-dlp/EJS configuration
-- Scene-change based slide candidate detection
-- Duplicate removal
-- PDF generation
-- Mobile-friendly Streamlit UI
+Replace `app.py`, `requirements.txt`, and add `packages.txt` to the GitHub repository, then commit.
 
-Replace `app.py` and `requirements.txt` in the GitHub repository, commit the changes, and wait for Streamlit Cloud to redeploy.
+If a particular YouTube video still cannot be fetched, the error may be caused by that video's availability, authentication, region/age restrictions, or further YouTube-side changes.
