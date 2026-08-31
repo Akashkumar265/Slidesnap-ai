@@ -32,18 +32,36 @@ with st.expander("⚙️ Settings"):
 
 @st.cache_resource(show_spinner=False)
 def ensure_deno():
-    deno=os.path.expanduser("~/.deno/bin/deno")
+    deno = os.path.expanduser("~/.deno/bin/deno")
     if os.path.exists(deno):
         return deno
-    env=os.environ.copy()
-    env["DENO_INSTALL"]=os.path.expanduser("~/.deno")
-    p=subprocess.run(
-        ["bash","-lc","curl -fsSL https://deno.land/install.sh | sh"],
-        capture_output=True,text=True,env=env
+
+    env = os.environ.copy()
+    env["DENO_INSTALL"] = os.path.expanduser("~/.deno")
+
+    # Streamlit Cloud installs `unzip` from packages.txt.
+    check = subprocess.run(
+        ["bash", "-lc", "command -v unzip >/dev/null 2>&1"],
+        capture_output=True
     )
-    if p.returncode!=0 or not os.path.exists(deno):
-        raise RuntimeError((p.stderr or p.stdout or "Deno installation failed.")[-1800:])
-    os.chmod(deno,0o755)
+    if check.returncode != 0:
+        raise RuntimeError(
+            "unzip is missing. Make sure packages.txt contains: unzip"
+        )
+
+    cmd = "curl -fsSL https://deno.land/install.sh | sh"
+    result = subprocess.run(
+        ["bash", "-lc", cmd],
+        capture_output=True,
+        text=True,
+        env=env
+    )
+    if result.returncode != 0 or not os.path.exists(deno):
+        raise RuntimeError(
+            (result.stderr or result.stdout or "Deno installation failed.")[-1800:]
+        )
+
+    os.chmod(deno, 0o755)
     return deno
 
 def run_command(cmd):

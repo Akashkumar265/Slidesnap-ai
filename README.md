@@ -1,7 +1,13 @@
-# SlideSnap AI v7
+# SlideSnap AI v8
 
-This version fixes the YouTube runtime problem by installing Deno at runtime using Deno's official installer and explicitly passing the Deno executable to yt-dlp.
+Fixes the Deno installation error on Streamlit Cloud.
 
-It also uses a fallback-friendly format selector (`b[ext=mp4]/b`) instead of requiring a specific pre-merged format.
+The previous version failed because Deno's official installer needs either `unzip` or `7z` to extract the downloaded archive. Streamlit Cloud now installs `unzip` through `packages.txt`.
 
-Replace `app.py` and `requirements.txt` in GitHub, commit, and wait for Streamlit to redeploy.
+Replace:
+- app.py
+- requirements.txt
+and ADD:
+- packages.txt
+
+Then commit the changes and let Streamlit redeploy.
