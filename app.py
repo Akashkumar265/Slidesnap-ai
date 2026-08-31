@@ -43,33 +43,19 @@ def download_video(url,outdir):
     if not vids: raise RuntimeError("Video file nahi mila.")
     return vids[0]
 
-def face_detector():
-    xml=cv2.data.haarcascades+"haarcascade_frontalface_default.xml"
-    return cv2.CascadeClassifier(xml)
-
-FACE=face_detector()
-
 def small_gray(frame):
     x=cv2.resize(frame,(240,135))
     return cv2.cvtColor(x,cv2.COLOR_BGR2GRAY)
 
 def slide_score(frame, prev_sig, threshold):
-    # Scene change score
     sig=small_gray(frame)
     diff=1.0 if prev_sig is None else cv2.absdiff(sig,prev_sig).mean()/255.0
-    # Slides usually have substantial straight/edge structure and text-like fine detail.
     gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     edges=cv2.Canny(gray,80,180)
     edge_density=float(np.mean(edges>0))
-    # Detect faces. A full-screen talking head is less likely to be a slide.
-    tiny=cv2.resize(gray,(640,360))
-    faces=FACE.detectMultiScale(tiny,scaleFactor=1.1,minNeighbors=5,minSize=(45,45))
-    face_area=sum(w*h for x,y,w,h in faces)/(tiny.shape[0]*tiny.shape[1])
-    # Heuristic score, not a neural classifier.
     text_like=min(edge_density/0.10,1.0)
-    face_penalty=min(face_area/0.10,1.0)
-    score=0.60*text_like + 0.40*(1.0-face_penalty)
-    return sig,diff,score,len(faces),face_area
+    score=0.45 + 0.55*text_like
+    return sig,diff,score,0,0
 
 def extract_slides(video,interval,threshold,outdir,keep_faces,progress_cb):
     cap=cv2.VideoCapture(str(video))
@@ -87,9 +73,7 @@ def extract_slides(video,interval,threshold,outdir,keep_faces,progress_cb):
             # Also accept strong slide score at periodic samples to catch gradual transitions.
             accept=(scene and score>=0.38) or score>=0.68
             # Reject obvious full-screen face shots.
-            if nfaces and face_area>=0.10 and not keep_faces:
-                accept=False
-            if accept:
+                    if accept:
                 candidates.append((t,frame.copy(),score))
             prev_sig=sig
         t+=interval
