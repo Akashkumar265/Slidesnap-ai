@@ -9,9 +9,9 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from youtube import extract_video_id, get_transcript
-from ai import generate_study_pack
-from store import can_generate, record_generation
+from services.youtube import extract_video_id, get_transcript
+from services.ai import generate_study_pack
+from services.store import can_generate, record_generation
 
 load_dotenv()
 
@@ -130,8 +130,9 @@ async def telegram_runner():
     await application.start()
     await application.updater.start_polling()
     log.info("Telegram polling started.")
-    # Keep the Telegram application alive while FastAPI serves Render.
-    await threading.Event().wait()
+    # Keep the Telegram asyncio loop alive without blocking it.
+    import asyncio
+    await asyncio.Event().wait()
 
 def run_telegram():
     import asyncio

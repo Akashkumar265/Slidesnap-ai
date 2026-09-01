@@ -42,3 +42,7 @@ Start command:
 `python bot.py`
 Health endpoint:
 `/health`
+
+## V1.2 fix
+- Fixed Telegram polling event-loop blocking so `/start` and messages are processed.
+- Default OpenAI model is `gpt-5.6-luna`.
