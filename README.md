@@ -1,17 +1,37 @@
-# SlideSnap AI v10
+# StudyAI Telegram Bot V1
 
-This version avoids direct YouTube downloading from Streamlit Cloud.
+YouTube educational lecture → transcript → AI study pack.
 
-YouTube mode uses VideoScale.sh as an external download/processing backend. Their current API uses HTTP Basic Auth and provides `/api/formats`, `/api/download`, `/api/status/:task_id`, and `/api/download/:task_id`. See their API docs.
+## Features
+- Telegram `/start`
+- Accept a YouTube URL
+- Fetch available YouTube transcript
+- Generate comprehensive notes
+- Generate MCQs
+- Generate practice questions
+- Generate numericals when applicable
+- Generate a Markdown study pack
+- Basic rate limiting / input validation
 
-Setup:
-1. Create a VideoScale account and obtain API credentials.
-2. In Streamlit Community Cloud -> app -> Settings/Secrets, add:
-   VIDEOSCALE_USERNAME = "your_username"
-   VIDEOSCALE_PASSWORD = "your_password"
-3. Replace app.py and requirements.txt in GitHub and commit.
-4. Streamlit will redeploy automatically.
-5. Paste a YouTube URL.
+## Important
+This V1 uses the video's available transcript/captions. It does not download or reproduce the full video. If a transcript is unavailable, ask the user to provide a transcript or source material.
 
-The app also supports direct video upload, which does not need VideoScale credentials.
-Use only content you are authorized to download/reproduce.
+## Setup
+1. Create a Telegram bot with BotFather and copy the token.
+2. Obtain an OpenAI API key.
+3. Copy `.env.example` to `.env`.
+4. Fill in the secrets.
+5. Install dependencies:
+   `pip install -r requirements.txt`
+6. Run:
+   `python bot.py`
+
+For production, keep secrets in your hosting provider's environment variables rather than committing `.env`.
+
+## Suggested next upgrades
+- PostgreSQL
+- Credits/payment system
+- PDF generation
+- Persistent job queue for long lectures
+- Admin dashboard
+- Website
