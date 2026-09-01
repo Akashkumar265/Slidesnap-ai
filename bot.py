@@ -9,9 +9,9 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from services.youtube import extract_video_id, get_transcript
-from services.ai import generate_study_pack
-from services.store import can_generate, record_generation
+from youtube import extract_video_id, get_transcript
+from ai import generate_study_pack
+from store import can_generate, record_generation
 
 load_dotenv()
 
