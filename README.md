@@ -35,3 +35,10 @@ For production, keep secrets in your hosting provider's environment variables ra
 - Persistent job queue for long lectures
 - Admin dashboard
 - Website
+
+## Render V1.1
+This version includes a FastAPI health server and binds to `0.0.0.0:$PORT`, making it suitable for Render Web Service deployment.
+Start command:
+`python bot.py`
+Health endpoint:
+`/health`

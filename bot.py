@@ -1,14 +1,13 @@
 import os
 import re
 import logging
-from datetime import date
+import threading
 from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from fastapi import FastAPI
+import uvicorn
+from telegram import Update
 from telegram.constants import ChatAction
-from telegram.ext import (
-    Application, CommandHandler, MessageHandler, CallbackQueryHandler,
-    ContextTypes, filters
-)
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from services.youtube import extract_video_id, get_transcript
 from services.ai import generate_study_pack
@@ -28,8 +27,18 @@ log = logging.getLogger("studyai")
 
 URL_RE = re.compile(r"https?://(?:www\.)?(?:youtube\.com|youtu\.be)/\S+", re.I)
 
+app = FastAPI(title="StudyAI Bot")
+
+@app.get("/")
+def root():
+    return {"service": "StudyAI Telegram Bot", "status": "running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 WELCOME = (
-    "🎓 *StudyAI V1*\\n\\n"
+    "🎓 *StudyAI V1.1*\\n\\n"
     "YouTube educational lecture ka link bhejo. "
     "Main available transcript se exam-oriented study material banaunga.\\n\\n"
     "📚 Complete Notes\\n"
@@ -37,20 +46,20 @@ WELCOME = (
     "✍️ Practice Questions\\n"
     "🧮 Numericals\\n"
     "🎯 Important Points\\n\\n"
-    "⚠️ V1 captions/transcript par depend karta hai."
+    "⚠️ V1.1 captions/transcript par depend karta hai."
 )
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context):
     await update.message.reply_text(WELCOME, parse_mode="Markdown")
 
-async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def help_cmd(update: Update, context):
     await update.message.reply_text(
         "YouTube lecture ka educational URL bhejo.\n\n"
         "Example: https://www.youtube.com/watch?v=...\n\n"
-        "Abhi V1 transcript available hone wale videos support karta hai."
+        "V1.1 transcript/captions available hone wale videos support karta hai."
     )
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context):
     text = (update.message.text or "").strip()
     match = URL_RE.search(text)
     if not match:
@@ -63,7 +72,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not can_generate(update.effective_user.id):
         await update.message.reply_text(
             "⏳ Aaj ka free generation limit complete ho gaya. "
-            "V1 mein payment system abhi enabled nahi hai."
+            "V1.1 mein payment system abhi enabled nahi hai."
         )
         return
 
@@ -85,23 +94,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        # Keep the request bounded for the first MVP.
         max_chars = int(os.getenv("MAX_TRANSCRIPT_CHARS", "60000"))
         if len(transcript) > max_chars:
-            transcript = transcript[:max_chars] + "\n[Transcript truncated for V1]"
+            transcript = transcript[:max_chars] + "\n[Transcript truncated for V1.1]"
 
         await status.edit_text("🧠 AI study material generate kar raha hoon...")
         result = generate_study_pack(transcript)
 
-        max_out = int(os.getenv("MAX_OUTPUT_CHARS", "30000"))
-        if len(result) > max_out:
-            result = result[:max_out] + "\n\n[Output truncated in Telegram V1]"
-
+        # Telegram text messages have a finite size; split long output.
         record_generation(update.effective_user.id)
-        await status.edit_text(
-            "✅ *Study pack ready!*\n\n" + result,
-            parse_mode="Markdown"
-        )
+        chunks = [result[i:i+3800] for i in range(0, len(result), 3800)]
+        await status.edit_text("✅ *Study pack ready!*", parse_mode="Markdown")
+        for chunk in chunks[:10]:
+            await update.message.reply_text(chunk)
+
+        if len(chunks) > 10:
+            await update.message.reply_text(
+                "ℹ️ Output bahut bada tha; V1.1 mein remaining text omit kiya gaya hai. "
+                "PDF output next version mein add karenge."
+            )
     except Exception as e:
         log.exception("Processing failed")
         await status.edit_text(
@@ -110,13 +121,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Technical detail: `{type(e).__name__}`"
         )
 
-def main():
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_cmd))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    log.info("StudyAI bot starting...")
-    app.run_polling()
+async def telegram_runner():
+    application = Application.builder().token(TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_cmd))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    log.info("Telegram polling started.")
+    # Keep the Telegram application alive while FastAPI serves Render.
+    await threading.Event().wait()
+
+def run_telegram():
+    import asyncio
+    asyncio.run(telegram_runner())
 
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=run_telegram, daemon=True).start()
+    port = int(os.getenv("PORT", "10000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
