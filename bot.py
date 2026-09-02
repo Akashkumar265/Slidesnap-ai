@@ -17,7 +17,7 @@ from store import can_generate, record_generation
 
 load_dotenv()
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 if not TOKEN:
     raise RuntimeError("TELEGRAM_BOT_TOKEN is missing")
 
